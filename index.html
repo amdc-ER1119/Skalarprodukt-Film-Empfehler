@@ -89,17 +89,12 @@
   .control { display: flex; flex-direction: column; gap: 4px; }
 
   /* Abbildung */
-  .fav-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; }
+  .fav-box { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; margin-top: 14px; max-width: 100%; }
+  .v-vector { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
   .fav-name { font-size: 1.15rem; font-weight: 700; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
   .tag { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
   .meta { font-size: 12px; color: var(--muted); }
   .v { font-family: var(--font-mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 16px; }
-  .stat { padding: 12px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .stat + .stat { border-left: 1px solid var(--line); }
-  @media (max-width: 520px) { .stat:nth-child(odd) { border-left: 0; } .stat:nth-child(n+3) { border-top: 1px solid var(--line); } }
-  .stat b { font-family: var(--font-mono); font-size: 22px; font-variant-numeric: tabular-nums; line-height: 1.2; }
-  .stat small { font-size: 12px; color: var(--muted); }
   figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0; }
   figcaption { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
   svg { width: 100%; height: auto; display: block; }
@@ -129,6 +124,24 @@
   .legend b { font-family: var(--font-mono); font-weight: 600; }
   .legend button { font: inherit; font-size: 12px; font-weight: 500; color: var(--accent); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; cursor: pointer; }
   .legend button:hover { background: var(--accent-soft); }
+
+  /* Nachrechnen */
+  .calc-intro { margin: 0; color: var(--muted); font-size: 13.5px; max-width: 64ch; }
+  .field { display: inline-flex; align-items: center; gap: 6px; }
+  .calc input, .calc-sum input {
+    font: inherit; font-family: var(--font-mono); font-weight: 600; width: 76px; padding: 5px 8px; text-align: right;
+    color: var(--ink); background: var(--bg); border: 1.5px solid var(--line); border-radius: 6px;
+  }
+  .calc input[data-state="ok"], .calc-sum input[data-state="ok"] { border-color: var(--accent); }
+  .calc input[data-state="bad"], .calc-sum input[data-state="bad"] { border-color: var(--mark); }
+  .glyph { font-style: normal; font-weight: 700; width: 1em; }
+  .glyph.ok { color: var(--accent); }
+  .glyph.bad { color: var(--mark); }
+  .calc-sum { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 14px; }
+  .calc-sum input { width: 96px; }
+  .solve { font: inherit; font-size: 12.5px; font-weight: 500; color: var(--accent); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; cursor: pointer; }
+  .solve:hover { background: var(--accent-soft); }
+  .calc-solution { font-family: var(--font-mono); font-size: 13px; background: var(--accent-soft); color: var(--accent); border-radius: 6px; padding: 8px 10px; overflow-x: auto; }
 
   /* Ranking */
   .formula {
@@ -176,6 +189,10 @@
       <div class="chips" id="chipsS"></div>
       <div class="chips"><span class="eyebrow">Mehr</span><select class="more-select" id="moreSel" aria-label="Weiteren Titel wählen"></select></div>
     </div>
+    <div class="fav-box">
+      <span class="fav-name" id="favName"></span>
+      <span class="meta" id="favMeta"></span>
+    </div>
   </section>
 
   <section aria-label="Deine Präferenzen">
@@ -183,29 +200,32 @@
     <div class="panel">
       <div class="panel-top">
         <div class="control"><span class="eyebrow">Dimensionen</span><div class="seg" id="dimSeg"></div></div>
-        <div class="control" style="min-width:0"><span class="eyebrow">Dein Vektor</span><div class="u-vector" id="uOut"></div></div>
       </div>
       <div class="sliders" id="sliders"></div>
+      <div class="control" style="min-width:0"><span class="eyebrow">Dein Vektor</span><div class="u-vector" id="uOut"></div></div>
+    </div>
+  </section>
+
+  <section aria-label="Nachrechnen">
+    <h2>3 · Selbst nachrechnen</h2>
+    <div class="panel">
+      <p class="calc-intro">Berechne das Skalarprodukt von u und dem Vektor des Favoriten und trage das Ergebnis ein.</p>
+      <div class="control" style="min-width:0"><span class="eyebrow" id="favVecLbl">Vektor des Favoriten</span><div class="u-vector v-vector" id="favVec"></div></div>
+      <div class="calc-sum">
+        <label for="calcSum"><b>u · v</b> =</label>
+        <span class="field"><input id="calcSum" type="number" inputmode="numeric" min="0" step="1" data-state=""><i class="glyph" id="glyphSum" aria-hidden="true"></i></span>
+        <button type="button" class="solve" id="solve" aria-expanded="false">Lösung zeigen</button>
+      </div>
+      <div class="calc-solution" id="solution" hidden></div>
     </div>
   </section>
 
   <section aria-label="Abbildung">
-    <h2>3 · Passung als Abbildung</h2>
+    <h2>4 · Passung als Abbildung</h2>
     <div class="controls">
       <div class="control"><span class="eyebrow">Maß</span><div class="seg" id="metricSeg"></div></div>
       <div class="control"><span class="eyebrow">Datenbasis</span><div class="seg" id="scopeSeg"></div></div>
       <div class="control"><span class="eyebrow">Typ</span><div class="seg" id="typeSeg"></div></div>
-    </div>
-    <div class="fav-head">
-      <span class="fav-name" id="favName"></span>
-      <span class="meta" id="favMeta"></span>
-      <span class="v" id="favVec"></span>
-    </div>
-    <div class="stats">
-      <div class="stat"><small>Skalarprodukt u · v</small><b id="stDot"></b></div>
-      <div class="stat"><small>Winkel α zwischen u und v</small><b id="stAng"></b></div>
-      <div class="stat"><small>Kosinus cos α</small><b id="stCos"></b></div>
-      <div class="stat"><small id="stRankLbl">Rang des Favoriten</small><b id="stRank"></b></div>
     </div>
     <figure>
       <svg id="svgMain" viewBox="0 0 380 400" role="img"></svg>
@@ -215,7 +235,7 @@
   </section>
 
   <section aria-label="Ranking">
-    <h2>4 · Ranking</h2>
+    <h2>5 · Ranking</h2>
     <div class="formula" id="formula"></div>
     <ol class="list" id="list"></ol>
     <button type="button" class="more" id="more"></button>
@@ -493,7 +513,7 @@ Ein Minecraft Film;F;1,2,8,7,7,4,1,4,2,0
     });
     $("moreSel").addEventListener("change", e => { if (e.target.value) setFav(e.target.value); });
   }
-  function setFav(title) { state.fav = title; render(); }
+  function setFav(title) { state.fav = title; buildCalc(); render(); }
 
   // Segmented control: options = [[value, label], ...]
   function seg(id, key, options, onChange) {
@@ -523,6 +543,29 @@ Ein Minecraft Film;F;1,2,8,7,7,4,1,4,2,0
     $("o" + i).textContent = state.u[i];
     render();
   });
+
+  // ---- Nachrechnen
+  let solutionOpen = false;
+  function buildCalc() {
+    solutionOpen = false;
+    $("calcSum").value = "";
+  }
+  function mark(input, glyph, text, correct) {
+    const empty = text === "";
+    const st = empty ? "" : (+text === correct ? "ok" : "bad");
+    input.dataset.state = st;
+    glyph.className = "glyph" + (st ? " " + st : "");
+    glyph.textContent = st === "ok" ? "✓" : st === "bad" ? "✗" : "";
+  }
+  function updateCalc(u, v, dp) {
+    mark($("calcSum"), $("glyphSum"), $("calcSum").value, dp);
+    $("solution").hidden = !solutionOpen;
+    $("solve").setAttribute("aria-expanded", String(solutionOpen));
+    $("solve").textContent = solutionOpen ? "Lösung verbergen" : "Lösung zeigen";
+    $("solution").textContent = `u · v = ${dp}`;
+  }
+  $("calcSum").addEventListener("input", () => render());
+  $("solve").addEventListener("click", () => { solutionOpen = !solutionOpen; render(); });
 
   // ---- Abbildung
   const ORIGIN = { x: 44, y: 350 };
@@ -613,12 +656,9 @@ Ein Minecraft Film;F;1,2,8,7,7,4,1,4,2,0
     $("favName").innerHTML = `${fav.title}<span class="tag">${TYPE_NAME[fav.type]}</span>`;
     $("favMeta").textContent = fav.meta;
     $("favMeta").hidden = !fav.meta;
+    $("favVecLbl").textContent = `Vektor des Favoriten: ${fav.title}`;
     $("favVec").textContent = `v = ${vec(v)}`;
-    $("stDot").textContent = fmt(dp);
-    $("stAng").textContent = nu && nv ? `${fmt(alpha, 0)}°` : "–";
-    $("stCos").textContent = nu && nv ? fmt(cosA, 2) : "–";
-    $("stRankLbl").textContent = `Rang in der Liste (${rows.length})`;
-    $("stRank").textContent = nu && favIdx >= 0 ? favIdx + 1 : "–";
+    updateCalc(u, v, dp);
 
     // Zeichnung: Skalarprodukt in Originalmaßstab, Kosinus am Einheitsquadrat
     const topRect = top && !topIsFav
@@ -632,7 +672,7 @@ Ein Minecraft Film;F;1,2,8,7,7,4,1,4,2,0
     }
 
     const sc = x => isDot ? `u · v = <b>${fmt(x)}</b>` : `cos α = <b>${fmt(x, 2)}</b>`;
-    let lg = `<div><i class="sw fav"></i><span>Favorit <b>${fav.title}</b>: ${sc(favScore)}</span></div>`;
+    let lg = `<div><i class="sw fav"></i><span>Favorit <b>${fav.title}</b>: ${sc(favScore)}${nu && favIdx >= 0 ? ` · Rang ${favIdx + 1} von ${rows.length}` : ""}</span></div>`;
     if (top) {
       lg += topIsFav
         ? `<div><span>Dein Favorit steht in der Liste an Platz 1.</span></div>`
@@ -665,13 +705,14 @@ Ein Minecraft Film;F;1,2,8,7,7,4,1,4,2,0
     const b = e.target.closest("button[data-t]");
     if (b) { $("moreSel").value = ""; setFav(b.dataset.t); }
   });
-  seg("dimSeg", "dim", [3, 4, 5, 6, 7, 8, 9, 10].map(n => [n, n]), buildSliders);
+  seg("dimSeg", "dim", [3, 4, 5, 6, 7, 8, 9, 10].map(n => [n, n]), () => { buildSliders(); buildCalc(); });
   seg("scopeSeg", "scope", [["core", `Auswahl (${nCore})`], ["all", `Alle (${DATA.length})`]]);
   seg("typeSeg", "type", [["all", "Alle"], ["F", "Filme"], ["S", "Serien"]]);
   seg("metricSeg", "metric", [["dot", "Skalarprodukt"], ["cos", "Kosinus"]]);
   $("more").addEventListener("click", () => { state.more = !state.more; render(); });
   buildPicker();
   buildSliders();
+  buildCalc();
   render();
 </script>
 
